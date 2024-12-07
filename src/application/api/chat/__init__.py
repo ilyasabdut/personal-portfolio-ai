@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException
-from loguru import logger
 
 from src.adapters import LLMAdapter
 from src.schemas.chat import ChatRequest, ChatResponse

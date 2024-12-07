@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from src.common import LLMConstants, LLMError
+from src.common.prompts import Prompts
 from src.configs.configs import MoneyTrackerConfig, money_tracker_config
 from src.schemas.chat import ChatMessage, TokenUsage
 
@@ -21,7 +22,7 @@ class LLMAdapter:
         self.system_prompt = getattr(
             money_tracker_config,
             "llm_system_prompt",
-            LLMConstants.DEFAULT_SYSTEM_PROMPT,
+            Prompts.DEFAULT_SYSTEM_PROMPT,
         )
 
         if not self.api_key:
@@ -37,8 +38,7 @@ class LLMAdapter:
     def _build_messages(self, user_message: str) -> List[Dict[str, str]]:
         """Build the messages list with system prompt and user message."""
         return [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": user_message},
+            {"role": "user", "content": self.system_prompt.format(user_message=user_message)},
         ]
 
     async def chat_completion(
@@ -65,11 +65,14 @@ class LLMAdapter:
             raise ValueError(
                 f"Invalid model. Available models: {', '.join(LLMConstants.AVAILABLE_MODELS)}"
             )
+        kwargs = LLMConstants.kwargs
+        kwargs['model'] = use_model
 
         payload = {
-            "model": use_model,
+            **kwargs,
             "messages": self._build_messages(message),
         }
+
         logger.info(f"LLM payload: {payload}")
         async with httpx.AsyncClient() as client:
             try:
