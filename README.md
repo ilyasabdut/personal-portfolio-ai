@@ -9,6 +9,14 @@ Features
 - Investment Suggestions: Suggest ways to improve financial habits and manage investments effectively.
 - Budgeting Assistance: Answer questions about budgeting, savings, taxes, and money management specific to Indonesia.
 
+TODO
+- Add langchain ConversationMemory (withou external database)
+- Add RAG:
+   - use qDrant for vector database
+   - use pymupdf for pdf parsing
+   - load pdf, split to chunks, and use qDrant to store in vector database
+
+   
 Installation
 1. Clone the repository:
    git clone https://github.com/yourusername/money-tracker-ai.git
