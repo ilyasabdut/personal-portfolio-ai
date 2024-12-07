@@ -37,7 +37,9 @@ class MoneyTrackerConfig:
 
                 cls._obj = Config(env_vars)
 
-                logger.info("Successfully initiated Money Tracker configuration")
+                logger.info(
+                    "Successfully initiated Money Tracker configuration"
+                )
 
             except Exception as e:
                 logger.error(
@@ -56,7 +58,9 @@ class MoneyTrackerConfig:
         config = cls.get_config()
         if config.environment.lower() == "development":
             return "http://localhost:8000"
-        return "https://your-production-domain.com"  # Change this for production
+        return (
+            "https://your-production-domain.com"  # Change this for production
+        )
 
 
 money_tracker_config: Any = MoneyTrackerConfig.get_config()

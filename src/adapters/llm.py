@@ -4,28 +4,28 @@ import httpx
 from fastapi import HTTPException
 from loguru import logger
 
-from src.common import OpenRouterConstants, OpenRouterError
+from src.common import LLMConstants, LLMError
 from src.configs.configs import MoneyTrackerConfig, money_tracker_config
 from src.schemas.chat import ChatMessage, TokenUsage
 
 
-class OpenRouterAdapter:
+class LLMAdapter:
     def __init__(self):
-        self.api_key = money_tracker_config.openrouter_api_key
-        self.api_url = money_tracker_config.openrouter_api_url
+        self.api_key = money_tracker_config.llm_api_key
+        self.api_url = money_tracker_config.llm_api_url
         self.model = getattr(
             money_tracker_config,
-            "openrouter_model",
-            OpenRouterConstants.DEFAULT_MODEL,
+            "llm_model",
+            LLMConstants.DEFAULT_MODEL,
         )
         self.system_prompt = getattr(
             money_tracker_config,
-            "openrouter_system_prompt",
-            OpenRouterConstants.DEFAULT_SYSTEM_PROMPT,
+            "llm_system_prompt",
+            LLMConstants.DEFAULT_SYSTEM_PROMPT,
         )
 
         if not self.api_key:
-            raise ValueError("OpenRouter API key not configured")
+            raise ValueError("LLM API key not configured")
 
     def _get_headers(self) -> Dict[str, str]:
         return {
@@ -45,7 +45,7 @@ class OpenRouterAdapter:
         self, message: str, model: str = None, timeout: float = 30.0
     ) -> ChatMessage:
         """
-        Send a chat completion request to OpenRouter API.
+        Send a chat completion request to LLM API.
 
         Args:
             message: The user's message
@@ -58,33 +58,34 @@ class OpenRouterAdapter:
         Raises:
             HTTPException: If the API request fails
             ValueError: If an invalid model is specified
-            OpenRouterError: If OpenRouter returns an error response
+            LLMError: If LLM returns an error response
         """
         use_model = model if model else self.model
-        if use_model not in OpenRouterConstants.AVAILABLE_MODELS:
+        if use_model not in LLMConstants.AVAILABLE_MODELS:
             raise ValueError(
-                f"Invalid model. Available models: {', '.join(OpenRouterConstants.AVAILABLE_MODELS)}"
+                f"Invalid model. Available models: {', '.join(LLMConstants.AVAILABLE_MODELS)}"
             )
 
         payload = {
             "model": use_model,
             "messages": self._build_messages(message),
         }
+        logger.info(f"LLM payload: {payload}")
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
-                    f"{self.api_url}/api/v1/chat/completions",
+                    f"{self.api_url}/v1/chat/completions",
                     headers=self._get_headers(),
                     json=payload,
                     timeout=timeout,
                 )
                 response.raise_for_status()
                 data = response.json()
-                logger.info(f"OpenRouter response: {data}")
+                logger.info(f"LLM response: {data}")
 
                 if "error" in data:
                     error = data["error"]
-                    raise OpenRouterError(
+                    raise LLMError(
                         message=error.get("message", "Unknown error"),
                         code=error.get("code"),
                         metadata=error.get("metadata", {}),
@@ -101,8 +102,8 @@ class OpenRouterAdapter:
             except httpx.HTTPError as e:
                 logger.error(f"HTTP error occurred: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-            except OpenRouterError as e:
-                logger.error(f"OpenRouter error: {e.message} (code: {e.code})")
+            except LLMError as e:
+                logger.error(f"LLM error: {e.message} (code: {e.code})")
                 if e.code == 503:  # Service Unavailable
                     raise HTTPException(
                         status_code=503,

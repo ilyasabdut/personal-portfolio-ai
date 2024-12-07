@@ -1,7 +1,7 @@
 Money Tracker AI
 
 Overview
-Money Tracker AI is a FastAPI-based application designed to assist users in managing their personal finances. The application leverages the OpenRouter AI service to provide intelligent financial insights and assistance.
+Money Tracker AI is a FastAPI-based application designed to assist users in managing their personal finances. The application leverages the External AI service to provide intelligent financial insights and assistance.
 
 Features
 - Expense Tracking: Help users track their expenses and income.
@@ -20,8 +20,8 @@ Configuration
 - Create a .env file in the root directory:
    cp .env.example .env
 - Edit the .env file to set environment variables:
-   OPENROUTER_API_KEY=your_openrouter_api_key
-   OPENROUTER_API_URL=your_openrouter_api_url
+   LLM_API_KEY=your_llm_api_key
+   LLM_API_URL=your_llm_api_url
 
 Running the Application
 To start the application, run:
@@ -43,5 +43,4 @@ License
 This project is licensed under the MIT License. See the LICENSE file for details.
 
 Acknowledgments
-- OpenRouter AI for providing the AI capabilities.
 - FastAPI for the web framework.

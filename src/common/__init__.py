@@ -1,4 +1,4 @@
-from src.common.constants import OpenRouterConstants
-from src.common.exceptions import OpenRouterError
+from src.common.constants import LLMConstants
+from src.common.exceptions import LLMError
 
-__all__ = ["OpenRouterConstants", "OpenRouterError"]
+__all__ = ["LLMConstants", "LLMError"]

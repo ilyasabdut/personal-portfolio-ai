@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.application.api.chat import router as chat_router
 from src.configs.configs import MoneyTrackerConfig
 
-app = FastAPI(title="Chat API with OpenRouter")
+app = FastAPI(title="Chat API with LLM")
 
 # Configure CORS
 origins = [
@@ -32,7 +32,7 @@ api_router.include_router(chat_router, prefix="/chat")
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Chat API with OpenRouter"}
+    return {"message": "Welcome to the Chat API with LLM"}
 
 
 # Include the parent router in the app

@@ -1,7 +1,7 @@
 [project]
 name = "money-tracker-ai"
 version = "0.1.0"
-description = "A chat API using OpenRouter AI"
+description = "A chat API using External AI"
 authors = [
     { name = "Your Name", email = "your.email@example.com" }
 ]

@@ -1,3 +1,3 @@
-from src.adapters.openrouter import OpenRouterAdapter
+from src.adapters.llm import LLMAdapter
 
-__all__ = ["OpenRouterAdapter"]
+__all__ = ["LLMAdapter"]
