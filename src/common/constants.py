@@ -1,5 +1,5 @@
 class LLMConstants:
-    DEFAULT_MODEL = "llama-3.3-70b-specdec"
+    DEFAULT_MODEL = "meta-llama/llama-3.1-70b-instruct:free"
     AVAILABLE_MODELS = [
         "llama-3.3-70b-specdec",  # Groq
         "llama-3.1-8b-instant",  # Groq

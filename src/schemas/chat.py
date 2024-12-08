@@ -7,10 +7,10 @@ class TokenUsage(BaseModel):
     prompt_tokens: int
     completion_tokens: int
     total_tokens: int
-    queue_time: float
-    prompt_time: float
-    completion_time: float
-    total_time: float
+    queue_time: Optional[float] = None
+    prompt_time: Optional[float] = None
+    completion_time: Optional[float] = None
+    total_time: Optional[float] = None
 
 
 class ChatMessage(BaseModel):
