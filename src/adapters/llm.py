@@ -1,12 +1,13 @@
-from typing import Dict, List
-
-import httpx
 from fastapi import HTTPException
+from langchain_core.prompts.chat import (
+    ChatPromptTemplate,
+)
+from langchain_openai import ChatOpenAI
 from loguru import logger
 
 from src.common import LLMConstants, LLMError
 from src.common.prompts import Prompts
-from src.configs.configs import MoneyTrackerConfig, money_tracker_config
+from src.configs.configs import money_tracker_config
 from src.schemas.chat import ChatMessage, TokenUsage
 
 
@@ -28,18 +29,24 @@ class LLMAdapter:
         if not self.api_key:
             raise ValueError("LLM API key not configured")
 
-    def _get_headers(self) -> Dict[str, str]:
-        return {
-            "Authorization": f"Bearer {self.api_key}",
-            "HTTP-Referer": MoneyTrackerConfig.get_server_host(),
-            "Content-Type": "application/json",
-        }
+        if self.model not in LLMConstants.AVAILABLE_MODELS:
+            raise ValueError(
+                f"Invalid model. Available models: {', '.join(LLMConstants.AVAILABLE_MODELS)}"
+            )
 
-    def _build_messages(self, user_message: str) -> List[Dict[str, str]]:
-        """Build the messages list with system prompt and user message."""
-        return [
-            {"role": "user", "content": self.system_prompt.format(user_message=user_message)},
-        ]
+        kwargs = LLMConstants.kwargs
+
+        # Use the OpenAI class to easily switch between different LLM providers
+        self.llm = ChatOpenAI(
+            api_key=self.api_key,
+            model=self.model,
+            base_url=self.api_url,
+            **kwargs,
+        )
+
+        self.prompt = ChatPromptTemplate.from_template(self.system_prompt)
+
+        self.chain = self.prompt | self.llm
 
     async def chat_completion(
         self, message: str, model: str = None, timeout: float = 30.0
@@ -60,59 +67,58 @@ class LLMAdapter:
             ValueError: If an invalid model is specified
             LLMError: If LLM returns an error response
         """
-        use_model = model if model else self.model
-        if use_model not in LLMConstants.AVAILABLE_MODELS:
-            raise ValueError(
-                f"Invalid model. Available models: {', '.join(LLMConstants.AVAILABLE_MODELS)}"
+        try:
+            # Run the chain with memory
+
+            response = await self.chain.ainvoke({"user_message": message})
+
+            # Log the response
+            logger.info(f"LLM response: {response}")
+
+            # Check for errors in the response
+            if "error" in response:
+                error = response["error"]
+                raise LLMError(
+                    message=error.get("message", "Unknown error"),
+                    code=error.get("code"),
+                    metadata=error.get("metadata", {}),
+                )
+
+            # Extract relevant data from the response
+            response_text = response.content
+            response_metadata = response.response_metadata
+            token_usage = response_metadata.get("token_usage", {})
+
+            # Log the token usage details
+            logger.info(f"Token usage: {token_usage}")
+
+            return ChatMessage(
+                role="assistant",
+                content=response_text,
+                usage=TokenUsage(
+                    completion_tokens=token_usage.get("completion_tokens", 0),
+                    prompt_tokens=token_usage.get("prompt_tokens", 0),
+                    total_tokens=token_usage.get("total_tokens", 0),
+                    queue_time=token_usage.get("queue_time", 0),
+                    prompt_time=token_usage.get("prompt_time", 0),
+                    completion_time=token_usage.get("completion_time", 0),
+                    total_time=token_usage.get("total_time", 0),
+                )
+                if token_usage
+                else None,
             )
-        kwargs = LLMConstants.kwargs
-        kwargs['model'] = use_model
 
-        payload = {
-            **kwargs,
-            "messages": self._build_messages(message),
-        }
-
-        logger.info(f"LLM payload: {payload}")
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(
-                    f"{self.api_url}/v1/chat/completions",
-                    headers=self._get_headers(),
-                    json=payload,
-                    timeout=timeout,
+        except LLMError as e:
+            logger.error(f"LLM error occurred: {e.message} (code: {e.code})")
+            if e.code == 503:  # Service Unavailable
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"Model unavailable: {e.metadata.get('raw', e.message)}",
                 )
-                response.raise_for_status()
-                data = response.json()
-                logger.info(f"LLM response: {data}")
+            raise HTTPException(status_code=500, detail=e.message)
 
-                if "error" in data:
-                    error = data["error"]
-                    raise LLMError(
-                        message=error.get("message", "Unknown error"),
-                        code=error.get("code"),
-                        metadata=error.get("metadata", {}),
-                    )
-
-                return ChatMessage(
-                    role="assistant",
-                    content=data["choices"][0]["message"]["content"],
-                    usage=TokenUsage(**data["usage"])
-                    if "usage" in data
-                    else None,
-                )
-
-            except httpx.HTTPError as e:
-                logger.error(f"HTTP error occurred: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
-            except LLMError as e:
-                logger.error(f"LLM error: {e.message} (code: {e.code})")
-                if e.code == 503:  # Service Unavailable
-                    raise HTTPException(
-                        status_code=503,
-                        detail=f"Model unavailable: {e.metadata.get('raw', e.message)}",
-                    )
-                raise HTTPException(status_code=500, detail=e.message)
-            except Exception as e:
-                logger.error(f"Error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+        except Exception as e:
+            logger.error(f"Unexpected error occurred: {e}")
+            raise HTTPException(
+                status_code=500, detail="An unexpected error occurred."
+            )
