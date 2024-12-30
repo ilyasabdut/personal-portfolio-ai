@@ -9,20 +9,31 @@ from src.schemas.chat import ChatMessage, TokenUsage
 
 
 class LLMModules:
-    llm_adapter_instance = LLMAdapter()
-    llm_memory_instance = llm_adapter_instance.memory
-
     async def chat_completion(
-        self, message: str, timeout: float = 30.0
+        self,
+        message: str,
+        timeout: float = 30.0,
+        use_model: str = None,
+        api_key: str = None,
+        api_url: str = None,
     ) -> ChatMessage:
         """
         Send a chat completion request to LLM API.
         """
-        use_model = getattr(
-            money_tracker_config,
-            "llm_model",
-            LLMConstants.DEFAULT_MODEL,
-        )
+
+        if api_key is None:
+            api_key = money_tracker_config.llm_api_key
+        if api_url is None:
+            api_url = money_tracker_config.llm_api_url
+        if use_model is None:
+            use_model = getattr(
+                money_tracker_config,
+                "llm_model",
+                LLMConstants.DEFAULT_MODEL,
+            )
+
+        llm_adapter_instance = LLMAdapter(api_key=api_key, api_url=api_url)
+        llm_memory_instance = llm_adapter_instance.memory
 
         if use_model not in LLMConstants.AVAILABLE_MODELS:
             raise ValueError(
@@ -32,22 +43,22 @@ class LLMModules:
         kwargs["model"] = use_model
 
         # Add user message to memory
-        self.llm_memory_instance.add_user_message(message)
+        llm_memory_instance.add_user_message(message)
         logger.info(
-            f"Current messages in memory: {self.llm_memory_instance.get_messages()}"
+            f"Current messages in memory: {llm_memory_instance.get_messages()}"
         )
 
         payload = {
             **kwargs,
-            "messages": self.llm_adapter_instance._build_messages(),
+            "messages": llm_adapter_instance._build_messages(),
         }
 
         logger.info(f"LLM payload: {payload}")
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
-                    f"{self.llm_adapter_instance.api_url}/v1/chat/completions",
-                    headers=self.llm_adapter_instance._get_headers(),
+                    f"{llm_adapter_instance.api_url}/v1/chat/completions",
+                    headers=llm_adapter_instance._get_headers(),
                     json=payload,
                     timeout=timeout,
                 )
@@ -64,7 +75,7 @@ class LLMModules:
                     )
 
                 # Add assistant message to memory
-                self.llm_adapter_instance.memory.add_assistant_message(
+                llm_adapter_instance.memory.add_assistant_message(
                     data["choices"][0]["message"]["content"]
                 )
 

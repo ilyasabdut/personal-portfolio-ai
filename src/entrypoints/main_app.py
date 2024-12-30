@@ -1,6 +1,7 @@
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.application.api.auth import router as auth_router
 from src.application.api.chat import router as chat_router
 from src.configs.configs import MoneyTrackerConfig
 
@@ -26,6 +27,7 @@ MoneyTrackerConfig.initiate()
 api_router = APIRouter(prefix="/api/v1")
 
 # Add child routers to the parent router
+api_router.include_router(auth_router, prefix="/auth")
 api_router.include_router(chat_router, prefix="/chat")
 # Example: api_router.include_router(user_router, prefix="/users")
 

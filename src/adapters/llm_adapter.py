@@ -15,10 +15,10 @@ class LLMAdapter:
             cls._instance = super(LLMAdapter, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, api_key: str, api_url: str, system_prompt: str = None):
         if not hasattr(self, "initialized"):
-            self.api_key = money_tracker_config.llm_api_key
-            self.api_url = money_tracker_config.llm_api_url
+            self.api_key = api_key
+            self.api_url = api_url
 
             self.system_prompt = getattr(
                 money_tracker_config,
