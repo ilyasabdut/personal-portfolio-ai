@@ -86,6 +86,14 @@ clean:
 run: ensure-uv
 	python run.py
 
+.PHONY: run-streamlit
+run-streamlit:
+	streamlit run src/application/frontend/streamlit_app.py
+
+.PHONY: run-all
+run-all:
+	make run & make run-streamlit
+
 .PHONY: build
 build: clean
 	mkdir -p dist
