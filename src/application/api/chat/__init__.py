@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 
 from src.application.api.auth import get_api_auth
 from src.modules.llm_modules import LLMModules
 from src.schemas.auth import APIAuth
-from src.schemas.chat import ChatRequest, ChatResponse
+from src.schemas.chat import ChatRequest, ChatResponse, ChatMessage
 
 router = APIRouter()
 llm = LLMModules()
@@ -18,12 +19,17 @@ async def chat(
     request: ChatRequest,
     api_auth: APIAuth = Depends(get_api_auth),
 ):
-    try:
-        response = await llm.chat_completion(
-            message=request.message,
-            api_key=api_auth.api_key,
-            api_url=api_auth.api_url,
+    response = await llm.chat_completion(
+        message=request.message,
+        stream=request.stream,
+        api_key=api_auth.api_key,
+        api_url=api_auth.api_url,
+    )
+
+    if request.stream:
+        return StreamingResponse(
+            response,
+            media_type="text/event-stream"
         )
+    else:
         return ChatResponse(response=response)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))

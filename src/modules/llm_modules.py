@@ -1,6 +1,8 @@
 import httpx
 from fastapi import HTTPException
 from loguru import logger
+import json
+from typing import Union, AsyncGenerator
 
 from src.adapters.llm_adapter import LLMAdapter
 from src.common import LLMConstants, LLMError
@@ -13,10 +15,11 @@ class LLMModules:
         self,
         message: str,
         timeout: float = 30.0,
-        use_model: str = None,
-        api_key: str = None,
-        api_url: str = None,
-    ) -> ChatMessage:
+        use_model: str | None = None,
+        api_key: str | None = None,
+        api_url: str | None = None,
+        stream: bool = False,
+    ) -> Union[AsyncGenerator[str, None], ChatMessage]:
         """
         Send a chat completion request to LLM API.
         """
@@ -39,15 +42,16 @@ class LLMModules:
             raise ValueError(
                 f"Invalid model. Available models: {', '.join(LLMConstants.AVAILABLE_MODELS)}"
             )
-        kwargs = LLMConstants.kwargs
+        
+        kwargs = LLMConstants.kwargs.copy()
         kwargs["model"] = use_model
+        kwargs["stream"] = stream
 
         # Add user message to memory
         llm_memory_instance.add_user_message(message)
-        logger.info(
-            f"Current messages in memory: {llm_memory_instance.get_messages()}"
-        )
+        logger.info(f"Current messages in memory: {llm_memory_instance.get_messages()}")
 
+        # Define payload only once
         payload = {
             **kwargs,
             "messages": llm_adapter_instance._build_messages(),
@@ -63,6 +67,36 @@ class LLMModules:
                     timeout=timeout,
                 )
                 response.raise_for_status()
+
+                if stream:
+                    async def generate_stream():
+                        collected_message = ""
+                        logger.debug("Starting stream generation")
+                        async for line in response.aiter_lines():
+                            logger.debug(f"Raw stream line: {line}")
+                            if line.strip():
+                                if line.startswith("data: "):
+                                    line = line[6:]
+                                if line.strip() == "[DONE]":
+                                    logger.debug("Stream completed")
+                                    break
+                                try:
+                                    chunk = json.loads(line)
+                                    logger.debug(f"Parsed chunk: {chunk}")
+                                    if chunk.get("choices") and chunk["choices"][0].get("delta", {}).get("content"):
+                                        content = chunk["choices"][0]["delta"]["content"]
+                                        collected_message += content
+                                        # Format as SSE
+                                        yield f"data: {content}\n\n"
+                                except json.JSONDecodeError as e:
+                                    logger.error(f"JSON decode error: {e} for line: {line}")
+                                    continue
+                        # Add the complete message to memory after streaming is done
+                        logger.info(f"Final collected message: {collected_message}")
+                        llm_memory_instance.add_assistant_message(collected_message)
+                    return generate_stream()
+
+                # Non-streaming response handling (existing code)
                 data = response.json()
                 logger.info(f"LLM response: {data}")
 

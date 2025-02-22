@@ -7,9 +7,9 @@ class LLMConstants:
     ]
 
     kwargs = {
-        "temperature": 0.0,
+        "temperature": 0.7,
         # "max_tokens": 4096,
-        "top_p": 0.5,
+        "top_p": 0.8,
         "stop": "```",
-        "stream": False,
+        "stream": True,
     }

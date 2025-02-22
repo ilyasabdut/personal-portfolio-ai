@@ -57,7 +57,7 @@ class MoneyTrackerConfig:
     def get_server_host(cls) -> str:
         config = cls.get_config()
         if config.environment.lower() == "development":
-            return "http://localhost:8000"
+            return money_tracker_config.backend_url
         return (
             "https://your-production-domain.com"  # Change this for production
         )

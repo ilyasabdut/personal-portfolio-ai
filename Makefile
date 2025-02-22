@@ -88,7 +88,11 @@ run: ensure-uv
 
 .PHONY: run-streamlit
 run-streamlit:
-	streamlit run src/application/frontend/streamlit_app.py
+ifeq ($(SHELL), /usr/bin/fish)
+	PYTHONPATH=./src (pyenv which python) -m streamlit run src/application/frontend/streamlit_app.py --server.port 8502
+else
+	PYTHONPATH=./src $(shell pyenv which python) -m streamlit run src/application/frontend/streamlit_app.py --server.port 8502
+endif
 
 .PHONY: run-all
 run-all:
