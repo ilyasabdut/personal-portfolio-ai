@@ -3,7 +3,7 @@ from typing import Dict, List
 from loguru import logger
 
 from src.common.prompts import Prompts
-from src.configs.configs import MoneyTrackerConfig, money_tracker_config
+from src.configs.configs import Config, config
 from src.modules.simple_memory import SimpleMemory
 
 
@@ -21,7 +21,7 @@ class LLMAdapter:
             self.api_url = api_url
 
             self.system_prompt = getattr(
-                money_tracker_config,
+                config,
                 "llm_system_prompt",
                 Prompts.DEFAULT_SYSTEM_PROMPT,
             )
@@ -38,7 +38,7 @@ class LLMAdapter:
     def _get_headers(self) -> Dict[str, str]:
         return {
             "Authorization": f"Bearer {self.api_key}",
-            "HTTP-Referer": MoneyTrackerConfig.get_server_host(),
+            "HTTP-Referer": Config.get_server_host(),
             "Content-Type": "application/json",
         }
 

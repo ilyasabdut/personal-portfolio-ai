@@ -5,7 +5,7 @@ from typing import Any
 from loguru import logger
 
 
-class MoneyTrackerConfig:
+class Config:
     _obj: Any = None
 
     @classmethod
@@ -38,12 +38,12 @@ class MoneyTrackerConfig:
                 cls._obj = Config(env_vars)
 
                 logger.info(
-                    "Successfully initiated Money Tracker configuration"
+                    "Successfully initiated AI configuration"
                 )
 
             except Exception as e:
                 logger.error(
-                    f"Failed to initiate Money Tracker configuration: {e}",
+                    f"Failed to initiate AI configuration: {e}",
                     exc_info=True,
                 )
                 raise
@@ -57,10 +57,10 @@ class MoneyTrackerConfig:
     def get_server_host(cls) -> str:
         config = cls.get_config()
         if config.environment.lower() == "development":
-            return money_tracker_config.backend_url
+            return config.backend_url
         return (
             "https://your-production-domain.com"  # Change this for production
         )
 
 
-money_tracker_config: Any = MoneyTrackerConfig.get_config()
+config: Any = Config.get_config()

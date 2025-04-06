@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.application.api.auth import router as auth_router
 from src.application.api.chat import router as chat_router
-from src.configs.configs import MoneyTrackerConfig
+from src.configs.configs import Config
 
 app = FastAPI(title="Chat API with LLM")
 
@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-MoneyTrackerConfig.initiate()
+Config.initiate()
 
 # Create parent API router with prefix
 api_router = APIRouter(prefix="/api/v1")

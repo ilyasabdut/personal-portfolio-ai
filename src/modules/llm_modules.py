@@ -6,7 +6,7 @@ from typing import Union, AsyncGenerator
 
 from src.adapters.llm_adapter import LLMAdapter
 from src.common import LLMConstants, LLMError
-from src.configs.configs import money_tracker_config
+from src.configs.configs import config
 from src.schemas.chat import ChatMessage, TokenUsage
 
 
@@ -25,12 +25,12 @@ class LLMModules:
         """
 
         if api_key is None:
-            api_key = money_tracker_config.llm_api_key
+            api_key = config.llm_api_key
         if api_url is None:
-            api_url = money_tracker_config.llm_api_url
+            api_url = config.llm_api_url
         if use_model is None:
             use_model = getattr(
-                money_tracker_config,
+                config,
                 "llm_model",
                 LLMConstants.DEFAULT_MODEL,
             )

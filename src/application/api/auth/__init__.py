@@ -13,18 +13,31 @@ from src.common.exceptions import LLMError
 from src.common import LLMConstants, LLMError
 from src.modules.llm_modules import LLMModules
 from src.schemas.auth import APIAuth
+from src.configs.configs import config
+
+import os
+from typing import Optional
 
 router = APIRouter()
 llm = LLMModules()
 
 async def get_api_auth(
-    api_key: str = Header(..., alias="API_KEY"),
-    api_url: str = Header(..., alias="API_URL"),
+    api_key: Optional[str] = Header(None, alias="API_KEY"),
+    api_url: Optional[str] = Header(None, alias="API_URL"),
 ) -> APIAuth:
     """Validate API credentials and return APIAuth object."""
+
+    # Fallback to env if headers are not provided
+    api_key = api_key or config.llm_api_key
+    api_url = api_url or config.llm_api_url
+
+    if not api_key or not api_url:
+        raise HTTPException(status_code=400, detail="Missing API credentials")
+
     response = await test_api_connection(api_key, api_url)
     if response.status_code == 200:
         return APIAuth(api_key=api_key, api_url=api_url)
+
     raise HTTPException(status_code=401, detail="Invalid API credentials")
 
 
