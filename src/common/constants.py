@@ -4,7 +4,7 @@ class LLMConstants:
         "llama-3.3-70b-specdec",  # Groq
         "llama-3.1-8b-instant",  # Groq
         "meta-llama/llama-3.2-1b-instruct:free",  # OpenRouter
-        "openrouter/quasar-alpha"
+        "openrouter/quasar-alpha",
     ]
 
     kwargs = {

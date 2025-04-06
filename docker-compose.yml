@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  personal-portfolio-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: registry.ilyasabdut.loseyourip.com/personal-portfolio-ai:latest
+    container_name: personal-portfolio-ai
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_API_KEY=secret-key
+      - LLM_API_URL=https://openrouter.ai/api
+      - APP_URL=http://localhost:8000
+      - QDRANT_URL=http://100.66.213.1:6333
+
+
+

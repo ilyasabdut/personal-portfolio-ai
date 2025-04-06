@@ -1,25 +1,21 @@
+import asyncio
+import json
+from typing import Optional
+
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
-from loguru import logger
-import json
-import asyncio
-from typing import Optional, Dict, Any
 from httpx import AsyncClient, HTTPError
-from fastapi.responses import JSONResponse
+from loguru import logger
 
 from src.common.constants import LLMConstants
 from src.common.exceptions import LLMError
-
-from src.common import LLMConstants, LLMError
+from src.configs.configs import config
 from src.modules.llm_modules import LLMModules
 from src.schemas.auth import APIAuth
-from src.configs.configs import config
-
-import os
-from typing import Optional
 
 router = APIRouter()
 llm = LLMModules()
+
 
 async def get_api_auth(
     api_key: Optional[str] = Header(None, alias="API_KEY"),
@@ -46,7 +42,9 @@ async def parse_stream_response(response) -> str:
     full_content = []
     try:
         async for line in response.aiter_lines():
-            if not line or line.startswith(":"):  # Skip empty lines and comments
+            if not line or line.startswith(
+                ":"
+            ):  # Skip empty lines and comments
                 continue
             if line.startswith("data: "):
                 try:
@@ -59,11 +57,14 @@ async def parse_stream_response(response) -> str:
                                 full_content.append(content)
                 except json.JSONDecodeError:
                     continue
-        
+
         return "".join(full_content).strip() or "Connected"
     except Exception as e:
         logger.error(f"Error parsing stream: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error parsing streaming response")
+        raise HTTPException(
+            status_code=500, detail="Error parsing streaming response"
+        )
+
 
 async def test_api_connection(
     api_key: str,
@@ -74,7 +75,7 @@ async def test_api_connection(
     try:
         kwargs = LLMConstants.kwargs.copy()
         kwargs["model"] = use_model or LLMConstants.DEFAULT_MODEL
-        
+
         payload = {
             **kwargs,
             "messages": [
@@ -93,24 +94,26 @@ async def test_api_connection(
                 json=payload,
                 timeout=30.0,
             )
-            
+
             logger.debug(f"Response status: {response.status_code}")
             logger.debug(f"Response headers: {dict(response.headers)}")
             logger.debug(f"Response body: {response.text}")
-            
+
             # Handle non-200 responses
             if response.status_code != 200:
                 error_message = response.text
                 try:
                     error_data = response.json()
-                    error_message = error_data.get("error", {}).get("message", response.text)
+                    error_message = error_data.get("error", {}).get(
+                        "message", response.text
+                    )
                 except json.JSONDecodeError:
                     pass
-                
+
                 logger.error(f"API returned error: {error_message}")
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=f"API error: {error_message}"
+                    detail=f"API error: {error_message}",
                 )
 
             # Handle streaming responses
@@ -118,15 +121,16 @@ async def test_api_connection(
             logger.info(f"Content-Type: {content_type}")
             if "text/event-stream" in content_type:
                 result = await parse_stream_response(response)
-                return JSONResponse(content={"message": result}, status_code=200)
+                return JSONResponse(
+                    content={"message": result}, status_code=200
+                )
 
             # Handle JSON responses
             try:
                 data = response.json()
             except json.JSONDecodeError:
                 raise HTTPException(
-                    status_code=500,
-                    detail="Invalid JSON response from API"
+                    status_code=500, detail="Invalid JSON response from API"
                 )
 
             # Check for API-level errors
@@ -143,12 +147,12 @@ async def test_api_connection(
                 logger.error(f"Invalid response structure: {data}")
                 raise HTTPException(
                     status_code=500,
-                    detail="Invalid response structure from API"
+                    detail="Invalid response structure from API",
                 )
 
             result = data["choices"][0]["message"]["content"]
             logger.info("API connection test successful")
-            
+
             return JSONResponse(
                 content={"message": result},
                 status_code=200,
@@ -161,16 +165,16 @@ async def test_api_connection(
     except HTTPError as e:
         logger.error(f"HTTP error: {str(e)}")
         raise HTTPException(
-            status_code=getattr(e.response, 'status_code', 500),
-            detail=f"API error: {getattr(e.response, 'text', str(e))}"
+            status_code=getattr(e.response, "status_code", 500),
+            detail=f"API error: {getattr(e.response, 'text', str(e))}",
         )
-        
+
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to process API response: {str(e)}"
+            status_code=500, detail=f"Failed to process API response: {str(e)}"
         )
+
 
 @router.post(
     "/test-connection",

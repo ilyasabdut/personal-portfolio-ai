@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from src.application.api.auth import get_api_auth
 from src.modules.llm_modules import LLMModules
 from src.schemas.auth import APIAuth
-from src.schemas.chat import ChatRequest, ChatResponse, ChatMessage
+from src.schemas.chat import ChatRequest, ChatResponse
 
 router = APIRouter()
 llm = LLMModules()
@@ -27,9 +27,6 @@ async def chat(
     )
 
     if request.stream:
-        return StreamingResponse(
-            response,
-            media_type="text/event-stream"
-        )
+        return StreamingResponse(response, media_type="text/event-stream")
     else:
         return ChatResponse(response=response)

@@ -23,6 +23,10 @@ class Config:
                                 key, value = line.strip().split("=", 1)
                                 env_vars[key.lower()] = value
                                 os.environ[key] = value
+                else:
+                    # Fallback to environment variables set by Docker or OS
+                    for key, value in os.environ.items():
+                        env_vars[key.lower()] = value
 
                 # Create a dynamic config object
                 class Config:
@@ -37,9 +41,7 @@ class Config:
 
                 cls._obj = Config(env_vars)
 
-                logger.info(
-                    "Successfully initiated AI configuration"
-                )
+                logger.info("Successfully initiated AI configuration")
 
             except Exception as e:
                 logger.error(
@@ -57,7 +59,7 @@ class Config:
     def get_server_host(cls) -> str:
         config = cls.get_config()
         if config.environment.lower() == "development":
-            return config.backend_url
+            return config.app_url
         return (
             "https://your-production-domain.com"  # Change this for production
         )

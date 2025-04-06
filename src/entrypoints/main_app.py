@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.application.api.auth import router as auth_router
 from src.application.api.chat import router as chat_router
+from src.application.api.upload import router as upload_router
 from src.configs.configs import Config
 
 app = FastAPI(title="Chat API with LLM")
@@ -29,6 +30,8 @@ api_router = APIRouter(prefix="/api/v1")
 # Add child routers to the parent router
 api_router.include_router(auth_router, prefix="/auth")
 api_router.include_router(chat_router, prefix="/chat")
+api_router.include_router(upload_router, prefix="/upload")
+
 # Example: api_router.include_router(user_router, prefix="/users")
 
 
@@ -36,6 +39,9 @@ api_router.include_router(chat_router, prefix="/chat")
 async def root():
     return {"message": "Welcome to the Chat API with LLM"}
 
+@app.get("/healthz")
+async def health_check():
+    return {"status": "ok"}
 
 # Include the parent router in the app
 app.include_router(api_router)
