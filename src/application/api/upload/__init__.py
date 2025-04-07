@@ -10,23 +10,33 @@ router = APIRouter()
 
 @router.post("/")
 async def upload_doc(file: UploadFile = File(...)):
-    if file.content_type != "application/pdf":
-        return {"error": "Only PDF files allowed"}
+    if file.content_type not in {"application/pdf", "text/plain"}:
+        return {"error": "Only PDF and TXT files allowed"}
 
     contents = await file.read()
-    doc = fitz.open(stream=contents, filetype="pdf")
 
     chunks = []
     metadata = []
 
-    for i, page in enumerate(doc):
-        text = page.get_text("text")
-        for para in text.split("\n"):
-            chunk = para.strip()
+    if file.content_type == "application/pdf":
+        doc = fitz.open(stream=contents, filetype="pdf")
+        for i, page in enumerate(doc):
+            text = page.get_text("text")
+            for para in text.split("\n"):
+                chunk = para.strip()
+                if chunk:
+                    chunks.append(chunk)
+                    metadata.append(
+                        {"source": file.filename, "page": i + 1, "text": chunk}
+                    )
+    elif file.content_type == "text/plain":
+        text = contents.decode("utf-8")
+        for i, line in enumerate(text.splitlines()):
+            chunk = line.strip()
             if chunk:
                 chunks.append(chunk)
                 metadata.append(
-                    {"source": file.filename, "page": i + 1, "text": chunk}
+                    {"source": file.filename, "line": i + 1, "text": chunk}
                 )
 
     index_chunks(chunks, metadata)
