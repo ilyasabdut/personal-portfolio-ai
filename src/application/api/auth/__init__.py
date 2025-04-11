@@ -74,7 +74,8 @@ async def test_api_connection(
     """Test the API connection with provided credentials."""
     try:
         kwargs = LLMConstants.kwargs.copy()
-        kwargs["model"] = use_model or LLMConstants.DEFAULT_MODEL
+        kwargs["model"] = use_model or config.llm_model
+        # LLMConstants.DEFAULT_MODEL
 
         payload = {
             **kwargs,

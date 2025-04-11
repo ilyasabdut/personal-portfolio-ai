@@ -34,16 +34,17 @@ class LLMModules:
             use_model = getattr(
                 config,
                 "llm_model",
-                LLMConstants.DEFAULT_MODEL,
+                # LLMConstants.DEFAULT_MODEL,
+                config.llm_model,
             )
 
         llm_adapter_instance = LLMAdapter(api_key=api_key, api_url=api_url)
         llm_memory_instance = llm_adapter_instance.memory
 
-        if use_model not in LLMConstants.AVAILABLE_MODELS:
-            raise ValueError(
-                f"Invalid model. Available models: {', '.join(LLMConstants.AVAILABLE_MODELS)}"
-            )
+        # if use_model not in LLMConstants.AVAILABLE_MODELS:
+        #     raise ValueError(
+        #         f"Invalid model. Available models: {', '.join(LLMConstants.AVAILABLE_MODELS)}"
+        #     )
 
         kwargs = LLMConstants.kwargs.copy()
         kwargs["model"] = use_model
