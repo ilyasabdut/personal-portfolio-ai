@@ -31,7 +31,7 @@ class LLMAdapter:
 
             self.memory = SimpleMemory()
             logger.info(
-                f"Initialized simple memory: {self.memory.get_messages()}"
+                f"Initialized simple memory: {self.memory.get_last7_messages()}"
             )
             self.initialized = True
 
@@ -45,5 +45,5 @@ class LLMAdapter:
     def _build_messages(self) -> List[Dict[str, str]]:
         """Build the messages list with system prompt and user messages."""
         messages = [{"role": "system", "content": self.system_prompt}]
-        messages.extend(self.memory.get_messages())
+        messages.extend(self.memory.get_last7_messages())
         return messages

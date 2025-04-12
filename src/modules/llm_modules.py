@@ -58,7 +58,7 @@ class LLMModules:
         # Add user message to memory
         llm_memory_instance.add_user_message(message_with_context)
         logger.info(
-            f"Current messages in memory: {llm_memory_instance.get_messages()}"
+            f"Current messages in memory: {llm_memory_instance.get_last7_messages()}"
         )
 
         # Define payload only once

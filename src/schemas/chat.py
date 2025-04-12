@@ -22,7 +22,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     stream: bool = False
-    model: Optional[str] = None
+    use_model: Optional[str] = None
 
 
 class ChatResponse(BaseModel):

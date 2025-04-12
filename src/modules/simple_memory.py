@@ -14,5 +14,8 @@ class SimpleMemory:
     def get_messages(self) -> List[Dict[str, str]]:
         return self.messages
 
+    def get_last7_messages(self) -> List[Dict[str, str]]:
+        return self.messages[-7:]
+
     def clear_memory(self):
         self.messages = []

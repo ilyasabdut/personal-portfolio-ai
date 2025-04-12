@@ -24,6 +24,7 @@ async def chat(
         stream=request.stream,
         api_key=api_auth.api_key,
         api_url=api_auth.api_url,
+        use_model=request.use_model,
     )
 
     if request.stream:
