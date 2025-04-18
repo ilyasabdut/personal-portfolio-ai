@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     environment: master
 
@@ -22,6 +22,11 @@ jobs:
           docker build -t registry.ilyasabdut.loseyourip.com/personal-portfolio-ai:latest . --no-cache
           docker push registry.ilyasabdut.loseyourip.com/personal-portfolio-ai:latest
 
+  deployment:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: master
+    steps:
       - name: Connect to Tailscale
         uses: tailscale/github-action@v3
         with:
