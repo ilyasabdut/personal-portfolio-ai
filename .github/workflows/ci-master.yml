@@ -53,7 +53,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             echo "Deploying on $(hostname)"
-            cd /home/ubuntu/composes/portfolio
+            cd /home/ubuntu/composes/portfolio-ai
 
             echo "Logging into private Docker registry..."
             echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login registry.ilyasabdut.loseyourip.com -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin

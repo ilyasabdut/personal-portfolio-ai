@@ -51,6 +51,8 @@ class LLMModules:
         kwargs["stream"] = stream
 
         context = get_rag_context(message)
+        logger.info(f"RAG context: {context}")
+        
         message_with_context = (
             f"Context:\n{context}\n\n" f"Question: {message}\n\nAnswer:"
         )

@@ -14,7 +14,7 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 COLLECTION_NAME = "documents"
 
 def get_qdrant_client():
-    return QdrantClient(url=config.qdrant_url)
+    return QdrantClient(url=config.qdrant_url, api_key=config.qdrant_api_key)
 
 
 def get_embedding(texts: list[str]) -> list[list[float]]:
@@ -42,15 +42,16 @@ def index_chunks(chunks: list[str], metadata: list[dict]):
         PointStruct(
             id=str(uuid4()),
             vector=vec.tolist(),
-            payload=meta,
+            payload={**meta, "text": chunk},
         )
-        for vec, meta in zip(embeddings, metadata)
+        for vec, meta, chunk in zip(embeddings, metadata, chunks)
     ]
+
 
     client.upsert(collection_name=COLLECTION_NAME, points=points)
 
 
-def search_chunks(query: str, top_k: int = 5) -> list[dict]:
+def search_chunks(query: str, top_k: int = 5, min_score: float = 0.3) -> list[dict]:
     client = get_qdrant_client()
     query_vec = np.array(get_embedding([query])).astype("float32")[0]
 
@@ -59,6 +60,8 @@ def search_chunks(query: str, top_k: int = 5) -> list[dict]:
         query_vector=query_vec.tolist(),
         limit=top_k,
     )
+    for hit in results:
+        print(f"[RAG] Score: {hit.score} | Source: {hit.payload.get('source')} | Text: {hit.payload.get('text')[:100]}...")
 
     return [
         {
@@ -67,7 +70,7 @@ def search_chunks(query: str, top_k: int = 5) -> list[dict]:
             "page": hit.payload.get("page"),
             "score": hit.score,
         }
-        for hit in results
+        for hit in results if hit.score >= min_score
     ]
 
 
