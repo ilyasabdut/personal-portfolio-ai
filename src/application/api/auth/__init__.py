@@ -4,7 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
-from httpx import AsyncClient, HTTPError
+from httpx import AsyncClient, HTTPStatusError
 from loguru import logger
 
 from src.common.constants import LLMConstants
@@ -20,19 +20,21 @@ llm = LLMModules()
 async def get_api_auth(
     api_key: Optional[str] = Header(None, alias="API_KEY"),
     api_url: Optional[str] = Header(None, alias="API_URL"),
+    use_model: Optional[str] = Header(None, alias="LLM_MODEL"),
 ) -> APIAuth:
     """Validate API credentials and return APIAuth object."""
 
     # Fallback to env if headers are not provided
     api_key = api_key or config.llm_api_key
     api_url = api_url or config.llm_api_url
+    use_model = use_model or config.llm_model
 
     if not api_key or not api_url:
         raise HTTPException(status_code=400, detail="Missing API credentials")
 
-    response = await test_api_connection(api_key, api_url)
+    response = await test_api_connection(api_key, api_url, use_model)
     if response.status_code == 200:
-        return APIAuth(api_key=api_key, api_url=api_url)
+        return APIAuth(api_key=api_key, api_url=api_url, use_model=use_model)
 
     raise HTTPException(status_code=401, detail="Invalid API credentials")
 
@@ -163,11 +165,11 @@ async def test_api_connection(
         logger.error("Request timed out")
         raise HTTPException(status_code=504, detail="Request timed out")
 
-    except HTTPError as e:
+    except HTTPStatusError as e:
         logger.error(f"HTTP error: {str(e)}")
         raise HTTPException(
-            status_code=getattr(e.response, "status_code", 500),
-            detail=f"API error: {getattr(e.response, 'text', str(e))}",
+            status_code=e.response.status_code,
+            detail=f"API error: {str(e)}",
         )
 
     except Exception as e:

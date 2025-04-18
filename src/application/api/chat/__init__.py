@@ -13,18 +13,17 @@ llm = LLMModules()
 @router.post(
     "/",
     response_model=ChatResponse,
-    dependencies=[Depends(get_api_auth)],
 )
 async def chat(
     request: ChatRequest,
-    api_auth: APIAuth = Depends(get_api_auth),
+    api_auth: APIAuth = Depends(get_api_auth)
 ):
     response = await llm.chat_completion(
         message=request.message,
         stream=request.stream,
         api_key=api_auth.api_key,
         api_url=api_auth.api_url,
-        use_model=request.use_model,
+        use_model=api_auth.use_model,
     )
 
     if request.stream:
