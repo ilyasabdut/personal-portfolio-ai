@@ -58,11 +58,7 @@ class Config:
     @classmethod
     def get_server_host(cls) -> str:
         config = cls.get_config()
-        if config.environment.lower() == "development":
-            return config.app_url
-        return (
-            "https://your-production-domain.com"  # Change this for production
-        )
+        return os.environ.get("SERVER_HOST", "https://example.com")
     
     @classmethod
     def get_session_secret_key(cls) -> str:

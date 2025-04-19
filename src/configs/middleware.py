@@ -1,5 +1,5 @@
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from fastapi.responses import Response
 import uuid
 from src.modules.simple_memory import SimpleMemory
 from fastapi import Request

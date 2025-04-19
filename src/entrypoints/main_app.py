@@ -5,27 +5,21 @@ from src.application.api.auth import router as auth_router
 from src.application.api.chat import router as chat_router
 from src.application.api.upload import router as upload_router
 from src.configs.configs import Config
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 app = FastAPI(title="Chat API with LLM")
 
-# Configure CORS
-origins = [
-    "http://localhost:8000",  # Allow localhost for development
-    "https://your-frontend-domain.com",  # Replace with your frontend domain
+# Define middleware array
+middleware = [
+    {"middleware_class": CORSMiddleware, "allow_origins": ["*"], "allow_credentials": True, "allow_methods": ["*"], "allow_headers": ["*"]},
+    {"middleware_class": TrustedHostMiddleware, "allowed_hosts": ["*"]},
+    {"middleware_class": SessionMiddleware},
 ]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows specified origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
-)
+for middleware_item in middleware:
+    app.add_middleware(middleware_item["middleware_class"], **{k:v for k, v in middleware_item.items() if k != "middleware_class"})
 
 Config.initiate()
-
-# Add SessionMiddleware for session management
-app.add_middleware(SessionMiddleware)
 
 # Create parent API router with prefix
 api_router = APIRouter(prefix="/api/v1")
