@@ -3,6 +3,7 @@ from starlette.responses import Response
 import uuid
 from src.modules.simple_memory import SimpleMemory
 from fastapi import Request
+import time
 
 SESSION_MEMORY: dict[str, SimpleMemory] = {}
 
@@ -41,15 +42,16 @@ class SessionMiddleware(BaseHTTPMiddleware):
 
         response: Response = await call_next(request)
 
-        # If it's a new session, set cookie in response
         if request.state.new_session:
             response.set_cookie(
                 key="session_id",
                 value=session_id,
-                httponly=False,
-                secure=False,
-                samesite="None",
-                path="/",
+                httponly=True,  # Ensures the cookie is inaccessible from JavaScript
+                secure=True,  # Ensures the cookie is sent only over HTTPS (important for production)
+                samesite="Lax",  # Use "Strict" or "Lax" for better security if cross-origin requests are not required
+                max_age=60*60*24*7,  # Cookie will last for 1 week (set max-age based on your requirements)
+                expires=time.time() + 60*60*24*7,  # Same as max_age, ensures expiration
+                path="/",  # Cookie available throughout the entire domain
             )
 
         return response
