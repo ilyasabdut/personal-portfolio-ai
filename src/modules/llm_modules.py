@@ -1,5 +1,5 @@
 import json
-from typing import AsyncGenerator, Union
+from typing import AsyncGenerator, Union, Optional
 
 import httpx
 from fastapi import HTTPException
@@ -10,6 +10,7 @@ from src.application.rag import get_rag_context
 from src.common import LLMConstants, LLMError
 from src.configs.configs import config
 from src.schemas.chat import ChatMessage, TokenUsage
+from src.modules.simple_memory import SimpleMemory
 
 
 class LLMModules:
@@ -21,6 +22,7 @@ class LLMModules:
         api_key: str | None = None,
         api_url: str | None = None,
         stream: bool = False,
+        memory: Optional[SimpleMemory] = None,
     ) -> Union[AsyncGenerator[str, None], ChatMessage]:
         """
         Send a chat completion request to LLM API.
@@ -38,7 +40,7 @@ class LLMModules:
                 config.llm_model,
             )
 
-        llm_adapter_instance = LLMAdapter(api_key=api_key, api_url=api_url)
+        llm_adapter_instance = LLMAdapter(api_key=api_key, api_url=api_url, memory=memory)
         llm_memory_instance = llm_adapter_instance.memory
 
         # if use_model not in LLMConstants.AVAILABLE_MODELS:
@@ -52,7 +54,7 @@ class LLMModules:
 
         context = get_rag_context(message)
         logger.info(f"RAG context: {context}")
-        
+
         message_with_context = (
             f"Context:\n{context}\n\n" f"Question: {message}\n\nAnswer:"
         )
@@ -86,7 +88,7 @@ class LLMModules:
                         collected_message = ""
                         logger.debug("Starting stream generation")
                         async for line in response.aiter_lines():
-                            logger.debug(f"Raw stream line: {line}")
+                            # logger.debug(f"Raw stream line: {line}")
                             if line.strip():
                                 if line.startswith("data: "):
                                     line = line[6:]
@@ -95,7 +97,7 @@ class LLMModules:
                                     break
                                 try:
                                     chunk = json.loads(line)
-                                    logger.debug(f"Parsed chunk: {chunk}")
+                                    # logger.debug(f"Parsed chunk: {chunk}")
                                     if chunk.get("choices") and chunk[
                                         "choices"
                                     ][0].get("delta", {}).get("content"):

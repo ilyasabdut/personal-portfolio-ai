@@ -76,4 +76,5 @@ def search_chunks(query: str, top_k: int = 5, min_score: float = 0.3) -> list[di
 
 def get_rag_context(query: str, top_k: int = 5) -> str:
     chunks = search_chunks(query, top_k)
+    print(f"Retrieved chunks: {chunks}")
     return "\n---\n".join([c["text"] for c in chunks])

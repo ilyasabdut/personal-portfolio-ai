@@ -1,9 +1,14 @@
-from typing import Dict, List
+from typing import List, Dict
 
 
 class SimpleMemory:
-    def __init__(self):
-        self.messages = []
+    def __init__(self, messages: List[Dict[str, str]] = None):
+        if messages is None:
+            messages = []
+        if not isinstance(messages, list):
+            raise ValueError("Messages must be a list.")
+        
+        self.messages = messages
 
     def add_user_message(self, message: str):
         self.messages.append({"role": "user", "content": message})
@@ -18,4 +23,4 @@ class SimpleMemory:
         return self.messages[-7:]
 
     def clear_memory(self):
-        self.messages = []
+        self.messages.clear()

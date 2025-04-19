@@ -63,6 +63,11 @@ class Config:
         return (
             "https://your-production-domain.com"  # Change this for production
         )
+    
+    @classmethod
+    def get_session_secret_key(cls) -> str:
+        config = cls.get_config()
+        return config.session_secret_key or "default_secret_key"
 
 
 config: Any = Config.get_config()

@@ -2,7 +2,7 @@ import asyncio
 import json
 from typing import Optional
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Request,Depends
 from fastapi.responses import JSONResponse
 from httpx import AsyncClient, HTTPStatusError
 from loguru import logger
@@ -12,9 +12,14 @@ from src.common.exceptions import LLMError
 from src.configs.configs import config
 from src.modules.llm_modules import LLMModules
 from src.schemas.auth import APIAuth
+from src.modules.simple_memory import SimpleMemory
+from fastapi.responses import StreamingResponse
+from src.configs.middleware import SESSION_MEMORY
+import uuid
 
 router = APIRouter()
 llm = LLMModules()
+# Global session memory map
 
 
 async def get_api_auth(
@@ -100,7 +105,7 @@ async def test_api_connection(
 
             logger.debug(f"Response status: {response.status_code}")
             logger.debug(f"Response headers: {dict(response.headers)}")
-            logger.debug(f"Response body: {response.text}")
+            # logger.debug(f"Response body: {response.text}")
 
             # Handle non-200 responses
             if response.status_code != 200:
@@ -191,3 +196,12 @@ async def post_test_api_connection(
 ) -> JSONResponse:
     """Test API connection endpoint."""
     return await test_api_connection(api_key, api_url, use_model)
+
+@router.get("/get-session")
+async def get_session_endpoint(request: Request):
+    session_id = request.state.session_id
+    memory = SESSION_MEMORY[session_id]
+    return JSONResponse(content={
+        "session_id": session_id,
+        "messages": memory.get_messages()
+    })

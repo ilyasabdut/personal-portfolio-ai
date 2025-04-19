@@ -1,6 +1,6 @@
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from src.configs.middleware import SessionMiddleware
 from src.application.api.auth import router as auth_router
 from src.application.api.chat import router as chat_router
 from src.application.api.upload import router as upload_router
@@ -23,6 +23,9 @@ app.add_middleware(
 )
 
 Config.initiate()
+
+# Add SessionMiddleware for session management
+app.add_middleware(SessionMiddleware)
 
 # Create parent API router with prefix
 api_router = APIRouter(prefix="/api/v1")
