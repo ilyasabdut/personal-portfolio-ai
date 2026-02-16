@@ -51,7 +51,7 @@ def index_chunks(chunks: list[str], metadata: list[dict]):
     client.upsert(collection_name=COLLECTION_NAME, points=points)
 
 
-def search_chunks(query: str, top_k: int = 5, min_score: float = 0.3) -> list[dict]:
+def search_chunks(query: str, top_k: int = 5, min_score: float = 0.2) -> list[dict]:
     client = get_qdrant_client()
     query_vec = np.array(get_embedding([query])).astype("float32")[0]
 
