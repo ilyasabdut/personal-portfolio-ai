@@ -2,6 +2,9 @@ version: "3.8"
 
 services:
   personal-portfolio-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: registry.ilyasabdut.loseyourip.com/personal-portfolio-ai:latest
     container_name: personal-portfolio-ai
     ports:
