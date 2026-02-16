@@ -2,18 +2,32 @@ version: "3.8"
 
 services:
   personal-portfolio-ai:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: registry.ilyasabdut.loseyourip.com/personal-portfolio-ai:latest
     container_name: personal-portfolio-ai
     ports:
       - "8000:8000"
     environment:
-      - LLM_API_KEY=secret-key
-      - LLM_API_URL=https://openrouter.ai/api
-      - APP_URL=http://localhost:8000
-      - QDRANT_URL=http://100.66.213.1:6333
+      #- LLM_API_KEY=${LLM_API_KEY}
+      #- LLM_API_URL=https://openrouter.ai/api
+      #- LLM_MODEL=meta-llama/llama-4-scout:free
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_API_URL=https://api.groq.com/openai
+      - LLM_MODEL=llama-3.3-70b-versatile
+      #- APP_URL=https://ai.ilyasabdut.loseyourip.com
+      - APP_URL=http://personal-portfolio-ai:8000
+      - QDRANT_URL=http://qdrant:6333
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+    depends_on:
+      - qdrant
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+networks:
+  default:
+    external: true
+    name: nginx_default
 
 
 
