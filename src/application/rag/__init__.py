@@ -51,7 +51,7 @@ def index_chunks(chunks: list[str], metadata: list[dict]):
     client.upsert(collection_name=COLLECTION_NAME, points=points)
 
 
-def search_chunks(query: str, top_k: int = 5, min_score: float = 0.2) -> list[dict]:
+def search_chunks(query: str, top_k: int = 10, min_score: float = 0.1) -> list[dict]:
     client = get_qdrant_client()
     query_vec = np.array(get_embedding([query])).astype("float32")[0]
 
@@ -74,7 +74,7 @@ def search_chunks(query: str, top_k: int = 5, min_score: float = 0.2) -> list[di
     ]
 
 
-def get_rag_context(query: str, top_k: int = 5) -> str:
+def get_rag_context(query: str, top_k: int = 10) -> str:
     chunks = search_chunks(query, top_k)
     print(f"Retrieved chunks: {chunks}")
     return "\n---\n".join([c["text"] for c in chunks])
