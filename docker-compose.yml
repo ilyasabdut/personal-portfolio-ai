@@ -15,13 +15,13 @@ services:
       - LLM_MODEL=llama-3.3-70b-versatile
       #- APP_URL=https://ai.ilyasabdut.loseyourip.com
       - APP_URL=http://personal-portfolio-ai:8000
-      - QDRANT_URL=http://qdrant:6333
+      - QDRANT_URL=http://personal-portfolio-ai-qdrant:6333
       - QDRANT_API_KEY=${QDRANT_API_KEY}
     depends_on:
       - qdrant
   qdrant:
     image: qdrant/qdrant
-    container_name: qdrant
+    container_name: personal-portfolio-ai-qdrant
     volumes:
       - ./qdrant_data:/qdrant/storage
 networks:
