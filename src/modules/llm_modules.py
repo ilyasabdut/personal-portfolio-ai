@@ -6,7 +6,6 @@ from fastapi import HTTPException
 from loguru import logger
 
 from src.adapters.llm_adapter import LLMAdapter
-from src.application.rag import get_rag_context
 from src.common import LLMConstants, LLMError
 from src.configs.configs import config
 from src.schemas.chat import ChatMessage, TokenUsage
@@ -52,11 +51,18 @@ class LLMModules:
         kwargs["model"] = use_model
         kwargs["stream"] = stream
 
-        # Temporarily disable RAG to debug
-        context = ""
-        logger.info(f"RAG context disabled for debugging")
+        # Get RAG context
+        try:
+            from src.application.rag import get_rag_context
+            context = get_rag_context(message, top_k=10)
+            logger.info(f"RAG context retrieved: {len(context)} chars")
+            message_with_context = f"""Context information:
+{context}
 
-        message_with_context = message
+User question: {message}""" if context else message
+        except Exception as e:
+            logger.error(f"RAG failed: {e}, using original message")
+            message_with_context = message
 
         # Add user message to memory
         llm_memory_instance.add_user_message(message_with_context)

@@ -6,8 +6,14 @@ from src.application.api.chat import router as chat_router
 from src.application.api.upload import router as upload_router
 from src.configs.configs import Config
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from loguru import logger
+import sys
 
 app = FastAPI(title="Chat API with LLM")
+
+# Configure loguru to output to stderr (captured by uvicorn)
+logger.remove()
+logger.add(sys.stderr, level="INFO")
 
 # Define middleware array
 middleware = [

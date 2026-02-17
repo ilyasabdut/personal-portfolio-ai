@@ -52,6 +52,7 @@ def index_chunks(chunks: list[str], metadata: list[dict]):
 
 
 def search_chunks(query: str, top_k: int = 10, min_score: float = 0.0) -> list[dict]:
+    print(f"[RAG] Searching for: {query}")
     client = get_qdrant_client()
     query_vec = np.array(get_embedding([query])).astype("float32")[0]
 
@@ -60,8 +61,9 @@ def search_chunks(query: str, top_k: int = 10, min_score: float = 0.0) -> list[d
         query_vector=query_vec.tolist(),
         limit=top_k,
     )
+    print(f"[RAG] Found {len(results)} results")
     for hit in results:
-        print(f"[RAG] Score: {hit.score} | Source: {hit.payload.get('source')} | Text: {hit.payload.get('text')[:100]}...")
+        print(f"[RAG] Score: {hit.score} | Source: {hit.payload.get('source')} | Text: {hit.payload.get('text')[:100] if hit.payload.get('text') else 'N/A'}...")
 
     return [
         {
