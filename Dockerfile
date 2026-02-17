@@ -9,7 +9,7 @@ WORKDIR /app
 # Install system dependencies for pymupdf and sentence-transformers
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libgl1-mesa-glx \
+    libgl1 \
     curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 

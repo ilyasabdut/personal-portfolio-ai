@@ -35,4 +35,4 @@ async def chat(
     if request.stream:
         return StreamingResponse(response, media_type="text/event-stream")
     else:
-        return ChatResponse(response=response)
+        return ChatResponse(response=response.content)

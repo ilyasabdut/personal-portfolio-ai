@@ -1,25 +1,20 @@
-import subprocess
+import uvicorn
 import sys
 
 if __name__ == "__main__":
-    # Command to run Granian
-    command = [
-        sys.executable,  # Use the current Python interpreter
-        "-m",
-        "granian",
-        "--interface", "asgi",
-        "--host", "0.0.0.0",
-        "--port", "8000",
-        "--reload",
-        "src.entrypoints.main_app:app",
-    ]
-
-    # Execute the command
     try:
-        subprocess.run(command, check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to start Granian: {e}", file=sys.stderr)
+        uvicorn.run(
+            "src.entrypoints.main_app:app",
+            host="0.0.0.0",
+            port=8000,
+            reload=False,
+            log_level="debug"
+        )
+    except Exception as e:
+        print(f"Failed to start server: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
     except KeyboardInterrupt:
-        print("Granian server stopped.")
+        print("Server stopped.")
         sys.exit(0)

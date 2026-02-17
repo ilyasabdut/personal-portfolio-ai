@@ -52,12 +52,11 @@ class LLMModules:
         kwargs["model"] = use_model
         kwargs["stream"] = stream
 
-        context = get_rag_context(message)
-        logger.info(f"RAG context: {context}")
+        # Temporarily disable RAG to debug
+        context = ""
+        logger.info(f"RAG context disabled for debugging")
 
-        message_with_context = (
-            f"Context:\n{context}\n\n" f"Question: {message}\n\nAnswer:"
-        )
+        message_with_context = message
 
         # Add user message to memory
         llm_memory_instance.add_user_message(message_with_context)
@@ -74,8 +73,18 @@ class LLMModules:
         logger.info(f"LLM payload: {payload}")
         async with httpx.AsyncClient() as client:
             try:
+                # Handle both API URLs with and without trailing /v1
+                api_url = llm_adapter_instance.api_url
+                if not api_url.endswith('/v1') and not api_url.endswith('/v1/'):
+                    api_url = f"{api_url}/v1"
+
+                full_url = f"{api_url}/chat/completions"
+                logger.info(f"Calling LLM API at: {full_url}")
+                logger.info(f"Using model: {kwargs['model']}")
+                logger.info(f"Payload has {len(payload['messages'])} messages")
+
                 response = await client.post(
-                    f"{llm_adapter_instance.api_url}/v1/chat/completions",
+                    full_url,
                     headers=llm_adapter_instance._get_headers(),
                     json=payload,
                     timeout=timeout,

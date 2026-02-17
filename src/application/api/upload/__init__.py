@@ -4,7 +4,7 @@ import fitz  # PyMuPDF
 from uuid import uuid4
 from fastapi import APIRouter, File, UploadFile
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from src.application.rag import index_chunks
 
 router = APIRouter()

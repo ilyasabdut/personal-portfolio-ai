@@ -96,8 +96,13 @@ async def test_api_connection(
 
         logger.info(f"Testing API connection: {payload}")
         async with AsyncClient() as client:
+            # Handle both API URLs with and without trailing /v1
+            api_url_clean = api_url.rstrip('/')
+            if not api_url_clean.endswith('/v1'):
+                api_url_clean = f"{api_url_clean}/v1"
+
             response = await client.post(
-                f"{api_url.rstrip('/')}/v1/chat/completions",
+                f"{api_url_clean}/chat/completions",
                 headers={"Authorization": f"Bearer {api_key}"},
                 json=payload,
                 timeout=30.0,
