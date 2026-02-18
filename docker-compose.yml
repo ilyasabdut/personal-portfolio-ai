@@ -16,15 +16,7 @@ services:
       - LLM_API_URL=${LLM_API_URL}
       - LLM_MODEL=${LLM_MODEL}
       - APP_URL=${APP_URL}
-      - QDRANT_URL=${QDRANT_URL}
-      - QDRANT_API_KEY=${QDRANT_API_KEY}
-    depends_on:
-      - qdrant
-  qdrant:
-    image: qdrant/qdrant
-    container_name: personal-portfolio-ai-qdrant
-    volumes:
-      - ./qdrant_data:/qdrant/storage
+      - SQLITE_DB_PATH=${SQLITE_DB_PATH}
 networks:
   default:
     external: true

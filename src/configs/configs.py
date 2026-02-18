@@ -35,6 +35,10 @@ class Config:
                         for key, value in env_vars.items():
                             setattr(self, key.lower(), value)
 
+                        # Set default vector database path
+                        if not hasattr(self, "sqlite_db_path"):
+                            self.sqlite_db_path = "vectors.db"
+
                         # Set defaults for required variables
                         if not hasattr(self, "environment"):
                             self.environment = "development"

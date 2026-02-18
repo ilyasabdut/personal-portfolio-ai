@@ -24,6 +24,8 @@ COPY run.py ./run.py
 
 # Install Python deps from pyproject.toml
 RUN pip install --no-cache-dir .
+# Install sqlite-vec extension
+RUN pip install sqlite-vec
 
 
 # Optional: preload the sentence-transformers model to speed up container startup

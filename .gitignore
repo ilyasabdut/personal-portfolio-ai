@@ -63,4 +63,7 @@ dmypy.json
 # Ruff
 ruff_cache/
 
+# SQLite databases
+*.db
+
 .DS_Store
