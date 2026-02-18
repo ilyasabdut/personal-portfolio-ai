@@ -56,11 +56,11 @@ def search_chunks(query: str, top_k: int = 10, min_score: float = 0.0) -> list[d
     client = get_qdrant_client()
     query_vec = np.array(get_embedding([query])).astype("float32")[0]
 
-    results = client.search(
+    results = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=query_vec.tolist(),
+        query=query_vec.tolist(),
         limit=top_k,
-    )
+    ).points
     print(f"[RAG] Found {len(results)} results")
     for hit in results:
         print(f"[RAG] Score: {hit.score} | Source: {hit.payload.get('source')} | Text: {hit.payload.get('text')[:100] if hit.payload.get('text') else 'N/A'}...")
@@ -79,4 +79,24 @@ def search_chunks(query: str, top_k: int = 10, min_score: float = 0.0) -> list[d
 def get_rag_context(query: str, top_k: int = 10) -> str:
     chunks = search_chunks(query, top_k)
     print(f"Retrieved chunks: {chunks}")
+
+    # If asking about current work/year, ensure Insignia (Present) is included
+    from datetime import datetime
+    current_year = str(datetime.now().year)
+    # English + Indonesian/Malay keywords for "present/current"
+    keywords = ["currently", "current", "now", "today", "present", current_year,
+                "sekarang", "skrg", "kini", "sekar", "saat ini"]
+
+    if any(keyword in query.lower() for keyword in keywords):
+        # Check if Insignia is in results
+        has_insignia = any("Insignia" in c.get("text", "") for c in chunks)
+        if not has_insignia:
+            # Fetch Insignia specifically
+            insignia_results = search_chunks("Insignia Senior Fullstack Engineer", top_k=3)
+            for r in insignia_results:
+                if "Insignia" in r.get("text", ""):
+                    chunks.insert(0, r)  # Add at the beginning
+                    print(f"[RAG] Added Insignia result for current work query")
+                    break
+
     return "\n---\n".join([c["text"] for c in chunks])

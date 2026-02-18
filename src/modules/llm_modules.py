@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from typing import AsyncGenerator, Union, Optional
 
 import httpx
@@ -10,6 +11,17 @@ from src.common import LLMConstants, LLMError
 from src.configs.configs import config
 from src.schemas.chat import ChatMessage, TokenUsage
 from src.modules.simple_memory import SimpleMemory
+
+
+def get_current_context() -> str:
+    """Get current date/time context for the LLM."""
+    now = datetime.now()
+    return f"""
+Current context:
+- Today's date: {now.strftime('%B %d, %Y')}
+- Current year: {now.year}
+- Current month: {now.strftime('%B')}
+"""
 
 
 class LLMModules:
@@ -51,12 +63,25 @@ class LLMModules:
         kwargs["model"] = use_model
         kwargs["stream"] = stream
 
-        # Get RAG context
+        # Get RAG context with current date
         try:
             from src.application.rag import get_rag_context
-            context = get_rag_context(message, top_k=10)
+            import re
+            current_year = str(datetime.now().year)
+
+            # For search, replace "current year" references with "currently/present" to match documents
+            search_query = message
+            if current_year in message:
+                search_query = re.sub(r'\b' + current_year + r'\b', 'currently', message, flags=re.IGNORECASE)
+                search_query = re.sub(r'\bthis year\b', 'currently', search_query, flags=re.IGNORECASE)
+
+            context = get_rag_context(search_query, top_k=10)
             logger.info(f"RAG context retrieved: {len(context)} chars")
+            current_context = get_current_context()
             message_with_context = f"""Context information:
+{current_context}
+
+Relevant information about Ilyas:
 {context}
 
 User question: {message}""" if context else message
